@@ -1,12 +1,58 @@
-# React + Vite
+# AptitudePro MERN Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A live MERN aptitude testing platform with a React/Vite frontend, Express API, MongoDB/Mongoose data layer, JWT auth, Gemini-assisted question generation, teacher exam operations, student attempts, results, analytics, solutions, and PYQ library.
 
-Currently, two official plugins are available:
+## Local Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Frontend:
 
-## Expanding the ESLint configuration
+```bash
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Backend:
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+The Vite dev server proxies `/api` to the Express backend. Set frontend overrides in `.env.local` only when needed:
+
+```bash
+VITE_API_BASE_URL=/api
+```
+
+## Backend Environment
+
+Create `backend/.env`:
+
+```bash
+NODE_ENV=development
+PORT=3001
+MONGO_URI=mongodb://127.0.0.1:27017/aptitude-platform
+JWT_SECRET=replace-with-a-long-secret
+CLIENT_ORIGIN=http://localhost:5173
+GEMINI_API_KEY=your-gemini-key
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+In production, `MONGO_URI` and `JWT_SECRET` are required. `GEMINI_API_KEY` is required for AI generation.
+
+## Deployment
+
+- Frontend: Vercel, build command `npm run build`, output directory `dist`.
+- Frontend env: `VITE_API_BASE_URL=https://<render-backend-domain>/api`.
+- Backend: Render Web Service, region Singapore, root `backend`, build command `npm install`, start command `npm start`.
+- Backend env: `NODE_ENV=production`, `MONGO_URI`, `JWT_SECRET`, `CLIENT_ORIGIN=https://<vercel-domain>`, `GEMINI_API_KEY`.
+- Database: MongoDB Atlas cluster in a South Asia-friendly region such as Singapore or Mumbai where available.
+
+## Verification
+
+```bash
+npm run lint
+npm run build
+npm --prefix backend run test
+```

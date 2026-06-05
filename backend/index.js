@@ -1,53 +1,53 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import { config, isOriginAllowed } from './config/env.js';
+import aiRoutes from './routes/aiRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import examRoutes from './routes/examRoutes.js';
+import pyqRoutes from './routes/pyqRoutes.js';
+import questionRoutes from './routes/questionRoutes.js';
 
-dotenv.config(); // Make sure to load the .env file
+export const app = express();
 
-const app = express();
-const port = 3001;
+app.use(cors({
+  origin(origin, callback) {
+    if (isOriginAllowed(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
+app.use(express.json({ limit: '2mb' }));
 
-app.use(cors());
-app.use(express.json());
-
-// Helper function to call the Hugging Face API
-async function queryHuggingFace(prompt) {
-  const model = "mistralai/Mistral-7B-Instruct-v0.1";
-  const response = await fetch(
-    `https://api-inference.huggingface.co/models/${model}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // This is the crucial line that adds your authentication token
-        "Authorization": `Bearer ${process.env.HF_TOKEN}`
-      },
-      body: JSON.stringify({ "inputs": prompt }),
-    }
-  );
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Hugging Face API Error: ${response.statusText} - ${errorBody}`);
-  }
-
-  const result = await response.json();
-  const generatedText = result[0].generated_text;
-  
-  const jsonStart = generatedText.lastIndexOf('{'); // Find the last '{' to get the start of the JSON
-  const jsonEnd = generatedText.lastIndexOf('}');
-  
-  if (jsonStart === -1 || jsonEnd === -1) {
-    throw new Error("AI did not return valid JSON.");
-  }
-  
-  const jsonString = generatedText.substring(jsonStart, jsonEnd + 1);
-  return JSON.parse(jsonString);
-}
-
-// The rest of your endpoints (/generate-question, /generate-exam) remain exactly the same
-// ...
-
-app.listen(port, () => {
-  console.log(`✅ AI server (powered by Hugging Face) is running on http://localhost:${port}`);
+app.get('/api/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    env: config.env,
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'connecting',
+  });
 });
+
+app.use('/api/auth', authRoutes);
+app.use('/api/exams', examRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/pyq', pyqRoutes);
+
+app.use((err, _req, res, _next) => {
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ error: err.message });
+  }
+  return res.status(500).json({ error: 'Server error' });
+});
+
+mongoose.connect(config.mongoUri)
+  .then(() => {
+    console.log('Connected to MongoDB');
+    app.listen(config.port, () => {
+      console.log(`Backend server is running on http://localhost:${config.port}`);
+    });
+  })
+  .catch((error) => {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
+  });

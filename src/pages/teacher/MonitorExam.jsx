@@ -1,86 +1,108 @@
-// src/pages/teacher/MonitorExam.jsx
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { supabase } from '../../supabaseClient';
+import { RefreshCw, Square, Users } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import PageHeader from '../../components/PageHeader';
+import StatusBadge from '../../components/StatusBadge';
+import api from '../../api/client';
+import { percent } from '../../utils/formatters';
 
 export default function MonitorExam() {
-  const { id: examId } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [exam, setExam] = useState(null);
-  const [submissions, setSubmissions] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const [examRes, analyticsRes] = await Promise.all([
+        api.get(`/exams/teacher/${id}`),
+        api.get(`/exams/teacher/${id}/analytics`),
+      ]);
+      setExam(examRes.data);
+      setAnalytics(analyticsRes.data);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [id]);
 
   useEffect(() => {
-    // Fetch initial data for the exam and submissions
-    const fetchInitialData = async () => {
-      const { data: examData, error: examError } = await supabase.from('exams').select('*, exam_questions(count)').eq('id', examId).single();
-      if (examError) { console.error(examError); navigate('/teacher'); return; }
-      setExam(examData);
+    fetchData();
+    const interval = window.setInterval(fetchData, 10000);
+    return () => window.clearInterval(interval);
+  }, [fetchData]);
 
-      const { data: submissionsData, error: submissionsError } = await supabase.from('submissions').select('id, student_id, profiles(full_name), student_answers(count)').eq('exam_id', examId);
-      if (submissionsError) console.error(submissionsError);
-      else setSubmissions(submissionsData);
-    };
-
-    fetchInitialData();
-
-    // Set up Supabase Realtime subscription
-    const channel = supabase.channel(`submissions:${examId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_answers' }, (payload) => {
-        // When a new answer is inserted, refetch the data for that student
-        fetchInitialData(); 
-      })
-      .subscribe();
-
-    // Cleanup subscription on component unmount
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [examId, navigate]);
-  
-  const handleEndExam = async () => {
-    if (!window.confirm("Are you sure you want to end this exam for all students?")) return;
-    const { error } = await supabase.from('exams').update({ status: 'completed', end_time: new Date().toISOString() }).eq('id', examId);
-    if (error) alert("Error ending exam: " + error.message);
-    else navigate('/teacher');
+  const endExam = async () => {
+    await api.put(`/exams/teacher/${id}/status`, { status: 'completed', end_time: new Date().toISOString() });
+    navigate('/teacher');
   };
 
-  if (!exam) return <div>Loading Live Monitor...</div>;
+  if (loading) return <div className="panel text-sm font-semibold text-slate-500">Loading live monitor...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700 mb-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-neutral-100">{exam.title}</h1>
-            <p className="text-sm text-sky-400 font-semibold">● Live Monitoring</p>
-          </div>
-          <button onClick={handleEndExam} className="bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">End Exam Now</button>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Live monitor"
+        title={exam?.title || 'Exam'}
+        description="Submissions refresh every 10 seconds while the exam is active."
+        actions={(
+          <>
+            <button type="button" className="btn-secondary" onClick={fetchData} disabled={refreshing}>
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button type="button" className="btn-danger" onClick={endExam}>
+              <Square className="h-4 w-4" />
+              End exam
+            </button>
+          </>
+        )}
+      />
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="metric"><Users className="h-5 w-5 text-sky-700" /><p className="mt-3 text-sm font-semibold text-slate-500">Submissions</p><p className="text-3xl font-extrabold">{analytics?.totalSubmissions || 0}</p></div>
+        <div className="metric"><p className="text-sm font-semibold text-slate-500">Average score</p><p className="mt-2 text-3xl font-extrabold text-teal-700">{percent(analytics?.averageScore || 0)}</p></div>
+        <div className="metric"><p className="text-sm font-semibold text-slate-500">Status</p><div className="mt-3"><StatusBadge status={exam?.effective_status || exam?.status} /></div></div>
+      </section>
+
+      <div className="surface overflow-hidden">
+        <div className="border-b border-slate-200 px-4 py-3">
+          <h2 className="font-extrabold text-slate-950">Recent submissions</h2>
         </div>
-        <div className="bg-neutral-800/50 rounded-xl border border-neutral-700">
-          <table className="w-full text-left">
-            <thead>{/* ... table headers ... */}</thead>
-            <tbody>
-              {submissions.map((sub) => {
-                const progress = sub.student_answers[0]?.count || 0;
-                const totalQuestions = exam.exam_questions[0]?.count || 0;
-                return (
-                  <tr key={sub.id} className="border-b border-neutral-700 last:border-b-0">
-                    <td className="p-4 font-medium text-neutral-200">{sub.profiles.full_name}</td>
-                    <td className="p-4">
-                      <div className="w-full bg-neutral-700 rounded-full h-4">
-                        <div className="bg-primary h-4 rounded-full" style={{ width: `${(progress / totalQuestions) * 100}%` }}></div>
-                      </div>
-                      <span className="text-xs text-neutral-400 mt-1 block">{progress} / {totalQuestions} Answered</span>
-                    </td>
-                    {/* ... other columns like status, actions ... */}
-                  </tr>
-                );
-              })}
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="table-head">
+              <tr>
+                <th className="px-4 py-3">Student</th>
+                <th className="px-4 py-3">Score</th>
+                <th className="px-4 py-3">Progress</th>
+                <th className="px-4 py-3">Submitted</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {(analytics?.scores || []).map((submission) => (
+                <tr key={submission.id}>
+                  <td className="px-4 py-3">
+                    <p className="font-bold text-slate-950">{submission.studentName}</p>
+                    <p className="text-xs text-slate-500">{submission.email}</p>
+                  </td>
+                  <td className="px-4 py-3 font-bold">{submission.score} / {submission.total}</td>
+                  <td className="px-4 py-3">
+                    <div className="h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-teal-600" style={{ width: `${submission.percentage}%` }} /></div>
+                  </td>
+                  <td className="px-4 py-3 text-slate-500">{new Date(submission.submitted_at).toLocaleString()}</td>
+                </tr>
+              ))}
+              {(analytics?.scores || []).length === 0 && (
+                <tr><td colSpan="4" className="px-4 py-10 text-center font-semibold text-slate-500">Waiting for submissions.</td></tr>
+              )}
             </tbody>
           </table>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

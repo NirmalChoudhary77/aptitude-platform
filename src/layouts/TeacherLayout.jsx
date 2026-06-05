@@ -1,78 +1,88 @@
-// src/layouts/TeacherLayout.jsx
-import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { BarChart3, BookOpen, ClipboardList, FileQuestion, LayoutDashboard, LogOut, Menu, Plus, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import useAuthStore from '../store/authStore';
 
-// Icons
-const DashboardIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>;
-const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>;
-const DocumentIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" /></svg>;
-const ChartIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" /><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" /></svg>;
+const navItems = [
+  { to: '/teacher', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/teacher/question-bank', label: 'Question Bank', icon: FileQuestion },
+  { to: '/teacher/exams/create', label: 'Create Exam', icon: Plus },
+  { to: '/teacher/analytics', label: 'Analytics', icon: BarChart3 },
+  { to: '/teacher/pyq', label: 'PYQ Library', icon: BookOpen },
+];
 
-
-const NavLink = ({ to, icon, children }) => {
+function NavLink({ item, onClick }) {
   const location = useLocation();
-  const isActive = location.pathname === to;
+  const Icon = item.icon;
+  const isActive = location.pathname === item.to;
 
   return (
-    <Link to={to}>
-      <motion.div
-        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive ? 'bg-primary text-white' : 'text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100'}`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        {icon}
-        <span className="font-semibold">{children}</span>
-      </motion.div>
+    <Link
+      to={item.to}
+      onClick={onClick}
+      className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition ${
+        isActive ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+      }`}
+    >
+      <Icon className="h-4 w-4" />
+      {item.label}
     </Link>
   );
-};
+}
 
 export default function TeacherLayout() {
   const navigate = useNavigate();
-  const auth = JSON.parse(localStorage.getItem("auth") || sessionStorage.getItem("auth") || '{}');
+  const { user, isAuthenticated, isLoading, logout } = useAuthStore();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    navigate("/login");
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) navigate('/login', { replace: true });
+    if (!isLoading && user?.role === 'student') navigate('/student', { replace: true });
+  }, [isAuthenticated, isLoading, navigate, user]);
+
+  const signOut = () => {
+    logout();
+    navigate('/login', { replace: true });
   };
 
+  if (isLoading || !user) {
+    return <div className="grid min-h-screen place-items-center text-sm font-semibold text-slate-500">Loading workspace...</div>;
+  }
+
+  const sidebar = (
+    <div className="flex h-full flex-col">
+      <div className="border-b border-slate-200 px-5 py-5">
+        <p className="text-lg font-extrabold tracking-tight text-slate-950">AptitudePro</p>
+        <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
+          <ClipboardList className="h-3.5 w-3.5" />
+          Teacher operations
+        </p>
+      </div>
+      <nav className="flex-1 space-y-1 px-3 py-4">
+        {navItems.map((item) => <NavLink key={item.to} item={item} onClick={() => setMobileOpen(false)} />)}
+      </nav>
+      <div className="border-t border-slate-200 p-4">
+        <p className="truncate text-sm font-bold text-slate-900">{user.full_name}</p>
+        <p className="truncate text-xs text-slate-500">{user.email}</p>
+        <button type="button" onClick={signOut} className="mt-3 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-red-50 hover:text-red-700">
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="flex min-h-screen font-sans">
-      {/* Sidebar */}
-      <motion.aside 
-        className="w-64 bg-neutral-800 border-r border-neutral-700 p-4 flex flex-col"
-        initial={{ x: -256 }}
-        animate={{ x: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-      >
-        <div className="mb-8">
-          <h1 className="text-xl font-bold text-white">AptitudePro</h1>
-          <span className="text-sm text-primary-light">Teacher Portal</span>
-        </div>
-        <nav className="space-y-2">
-                <NavLink to="/teacher" icon={<DashboardIcon />}>Dashboard</NavLink>
-                <NavLink to="/teacher/question-bank" icon={<DocumentIcon />}>Question Bank</NavLink> {/* Add this line */}
-                <NavLink to="/teacher/exams/create" icon={<PlusIcon />}>Create Exam</NavLink>
-                  <NavLink to="/teacher/analytics" icon={<ChartIcon />}>Analytics</NavLink> {/* Add this line */}
-
-              </nav>
-        <div className="mt-auto">
-          <div className="border-t border-neutral-700 pt-4">
-            <p className="text-sm text-white font-semibold">{auth.name || 'Teacher'}</p>
-            <p className="text-xs text-neutral-400">{auth.email}</p>
-            <button
-              onClick={handleLogout}
-              className="mt-3 text-left w-full text-neutral-400 hover:text-red-400 font-semibold transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </motion.aside>
-
-      {/* Main content */}
-      <main className="flex-1 p-6 lg:p-8 bg-neutral-900 overflow-y-auto">
+    <div className="min-h-screen bg-slate-50">
+      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-200 bg-white lg:block">{sidebar}</aside>
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
+        <p className="text-lg font-extrabold text-slate-950">AptitudePro</p>
+        <button type="button" onClick={() => setMobileOpen((value) => !value)} className="rounded-md border border-slate-200 p-2">
+          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </header>
+      {mobileOpen && <div className="fixed inset-0 z-20 bg-white pt-16 lg:hidden">{sidebar}</div>}
+      <main className="px-4 py-6 lg:ml-64 lg:px-8">
         <Outlet />
       </main>
     </div>

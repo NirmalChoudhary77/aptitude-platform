@@ -1,12 +1,14 @@
-import React from "react";
+import { Link } from 'react-router-dom';
 
-const NotFound = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="bg-white p-8 rounded shadow text-center">
-      <h1 className="text-3xl font-bold mb-4">404 - Not Found</h1>
-      <p className="text-gray-600">The page you are looking for does not exist.</p>
-    </div>
-  </div>
-);
-
-export default NotFound;
+export default function NotFound() {
+  return (
+    <main className="grid min-h-screen place-items-center bg-slate-50 px-4">
+      <div className="panel max-w-md text-center">
+        <p className="text-sm font-bold uppercase tracking-wide text-slate-500">404</p>
+        <h1 className="mt-2 text-3xl font-extrabold text-slate-950">Page not found</h1>
+        <p className="mt-3 text-sm text-slate-500">The page you opened does not exist in this workspace.</p>
+        <Link className="btn-primary mt-6" to="/">Go home</Link>
+      </div>
+    </main>
+  );
+}
