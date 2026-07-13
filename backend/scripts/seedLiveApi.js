@@ -230,6 +230,10 @@ const demoPyqTitles = new Set([
   'SSC CGL Quant PYQ Pack',
 ]);
 
+const legacyDemoQuestionTexts = [
+  'Pointing to a man, Riya says, "He is the son of my grandfather’s only son." How is the man related to Riya?',
+];
+
 const request = async (path, { token, method = 'GET', body } = {}) => {
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method,
@@ -334,7 +338,10 @@ const seed = async () => {
     request('/questions', { token: teacherToken }),
   ]);
 
-  const demoQuestionTexts = new Set(sampleQuestions.map((question) => question.text));
+  const demoQuestionTexts = new Set([
+    ...sampleQuestions.map((question) => question.text),
+    ...legacyDemoQuestionTexts,
+  ]);
 
   await deleteMatching(existingExams, (exam) => demoExamTitles.has(exam.title), (exam) => `/exams/teacher/${exam._id}`, teacherToken);
   await deleteMatching(existingPyqs, (pyq) => demoPyqTitles.has(pyq.title), (pyq) => `/pyq/${pyq._id}`, teacherToken);
