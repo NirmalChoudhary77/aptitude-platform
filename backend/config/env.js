@@ -32,12 +32,9 @@ const localDevOrigins = isProduction ? [] : [
   'http://127.0.0.1:4173',
 ];
 
-const vercelOrigins = isProduction ? ['https://*.vercel.app'] : [];
-
 const clientOrigins = Array.from(new Set([
   ...configuredOrigins,
   ...localDevOrigins,
-  ...vercelOrigins,
 ]));
 
 export const config = {
@@ -54,11 +51,13 @@ export const config = {
 export const isOriginAllowed = (origin) => {
   if (!origin) return true;
   if (clientOrigins.includes(origin)) return true;
-  return clientOrigins.some((allowedOrigin) => {
-    if (allowedOrigin.includes('*')) {
-      const pattern = new RegExp(`^${allowedOrigin.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*')}$`);
-      return pattern.test(origin);
+  if (isProduction) {
+    try {
+      const { protocol, hostname } = new URL(origin);
+      return protocol === 'https:' && hostname.endsWith('.vercel.app');
+    } catch {
+      return false;
     }
-    return false;
-  });
+  }
+  return false;
 };
