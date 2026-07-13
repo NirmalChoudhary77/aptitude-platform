@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js",
+    "seed": "node scripts/seedSampleData.js",
+    "seed:api": "node scripts/seedLiveApi.js",
     "test": "node --check index.js"
   },
   "engines": {
