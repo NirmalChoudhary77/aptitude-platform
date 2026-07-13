@@ -32,9 +32,12 @@ const localDevOrigins = isProduction ? [] : [
   'http://127.0.0.1:4173',
 ];
 
+const vercelOrigins = isProduction ? ['https://*.vercel.app'] : [];
+
 const clientOrigins = Array.from(new Set([
   ...configuredOrigins,
   ...localDevOrigins,
+  ...vercelOrigins,
 ]));
 
 export const config = {
