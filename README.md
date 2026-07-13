@@ -63,6 +63,12 @@ Frontend `.env.local`:
 VITE_API_BASE_URL=/api
 ```
 
+Vercel production env:
+
+```bash
+VITE_API_BASE_URL=https://your-render-service.onrender.com/api
+```
+
 Backend `backend/.env`:
 
 ```bash
@@ -81,7 +87,7 @@ GEMINI_MODEL=gemini-2.5-flash
 
 - Build: `npm run build`
 - Output: `dist`
-- Env: `VITE_API_BASE_URL=https://your-render-service.onrender.com/api`
+- Required env: `VITE_API_BASE_URL=https://your-render-service.onrender.com/api`
 
 **Render**
 
@@ -103,4 +109,5 @@ npm --prefix backend run test
 - Supabase has been removed.
 - MongoDB is the single source of truth.
 - Gemini keys stay server-side.
+- Vercel must point `VITE_API_BASE_URL` at the Render API, otherwise auth requests will hit Vercel and fail.
 - Vercel deep links are handled by `vercel.json`.

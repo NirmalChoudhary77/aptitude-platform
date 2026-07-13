@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+
 const localApiBaseUrl = (() => {
   if (typeof window === 'undefined') return '/api';
   const host = window.location.hostname;
@@ -9,11 +11,17 @@ const localApiBaseUrl = (() => {
   return '/api';
 })();
 
+const missingProductionApiUrl = import.meta.env.PROD && !configuredApiBaseUrl;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || localApiBaseUrl,
+  baseURL: configuredApiBaseUrl || localApiBaseUrl,
 });
 
 api.interceptors.request.use((config) => {
+  if (missingProductionApiUrl) {
+    return Promise.reject(new Error('Production API URL is missing. Set VITE_API_BASE_URL in Vercel to your Render backend /api URL.'));
+  }
+
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
