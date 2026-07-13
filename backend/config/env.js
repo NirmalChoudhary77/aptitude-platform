@@ -12,6 +12,14 @@ const requireInProduction = (name) => {
   return value;
 };
 
+const validateMongoUri = (value) => {
+  if (!value) return value;
+  if (!value.startsWith('mongodb://') && !value.startsWith('mongodb+srv://')) {
+    throw new Error('MONGO_URI must start with mongodb:// or mongodb+srv://');
+  }
+  return value;
+};
+
 const configuredOrigins = (process.env.CLIENT_ORIGIN || '')
   .split(',')
   .map((origin) => origin.trim())
@@ -33,7 +41,7 @@ export const config = {
   env: process.env.NODE_ENV || 'development',
   isProduction,
   port: process.env.PORT || 3001,
-  mongoUri: requireInProduction('MONGO_URI') || 'mongodb://127.0.0.1:27017/aptitude-platform',
+  mongoUri: validateMongoUri(requireInProduction('MONGO_URI') || 'mongodb://127.0.0.1:27017/aptitude-platform'),
   jwtSecret: requireInProduction('JWT_SECRET') || 'dev-only-aptitude-secret',
   clientOrigins,
   geminiApiKey: process.env.GEMINI_API_KEY || '',

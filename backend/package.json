@@ -8,6 +8,9 @@
     "dev": "node index.js",
     "test": "node --check index.js"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
