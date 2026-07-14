@@ -34,7 +34,7 @@ export default function Register() {
           <div className="grid h-10 w-10 place-items-center rounded-lg bg-white text-slate-950">
             <GraduationCap className="h-6 w-6" />
           </div>
-          <span className="text-xl font-extrabold">AptitudePro</span>
+          <span className="text-xl font-extrabold">Aptitude Platform</span>
         </div>
         <div className="max-w-xl">
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-sky-300">MERN assessment platform</p>
@@ -47,7 +47,7 @@ export default function Register() {
         <form onSubmit={handleSubmit} className="panel w-full max-w-md p-8">
           <div className="mb-8">
             <p className="text-sm font-bold uppercase tracking-wide text-slate-500">Create account</p>
-            <h2 className="mt-2 text-3xl font-extrabold text-slate-950">Join AptitudePro</h2>
+            <h2 className="mt-2 text-3xl font-extrabold text-slate-950">Join Aptitude Platform</h2>
           </div>
 
           {error && <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</div>}

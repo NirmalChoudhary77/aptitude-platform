@@ -1,4 +1,4 @@
-import { ArrowRight, Eye, EyeOff, GraduationCap, LockKeyhole, Sparkles } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, GraduationCap, LockKeyhole } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import authHero from '../../assets/auth-hero.png';
@@ -31,7 +31,7 @@ export default function Login() {
           <div className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white shadow-lg shadow-slate-950/10">
             <GraduationCap className="h-6 w-6" />
           </div>
-          <span className="text-xl font-extrabold">AptitudePro</span>
+          <span className="text-xl font-extrabold">Aptitude Platform</span>
         </div>
         <div className="relative z-10 my-8">
           <div className="relative mx-auto max-w-4xl">
@@ -40,17 +40,6 @@ export default function Login() {
               alt="Assessment dashboard workspace"
               className="aspect-[16/9] w-full rounded-lg border border-white/80 object-cover shadow-2xl shadow-slate-900/15"
             />
-            <div className="absolute left-6 top-6 rounded-lg border border-white/80 bg-white/90 p-4 shadow-xl shadow-slate-900/10 backdrop-blur animate-[float_6s_ease-in-out_infinite]">
-              <div className="flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-md bg-teal-600 text-white">
-                  <Sparkles className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Live monitor</p>
-                  <p className="text-lg font-extrabold text-slate-950">92 active</p>
-                </div>
-              </div>
-            </div>
             <div className="absolute bottom-6 right-6 rounded-lg border border-white/80 bg-white/90 p-4 shadow-xl shadow-slate-900/10 backdrop-blur animate-[float_7s_ease-in-out_1s_infinite]">
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Avg score</p>
               <div className="mt-2 flex items-end gap-1">
@@ -75,7 +64,7 @@ export default function Login() {
               <div className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white">
                 <GraduationCap className="h-6 w-6" />
               </div>
-              <span className="text-xl font-extrabold text-slate-950">AptitudePro</span>
+              <span className="text-xl font-extrabold text-slate-950">Aptitude Platform</span>
             </div>
           </div>
           <div className="mb-8">

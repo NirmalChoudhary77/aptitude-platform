@@ -52,7 +52,7 @@ export default function TeacherLayout() {
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="border-b border-slate-200 px-5 py-5">
-        <p className="text-lg font-extrabold tracking-tight text-slate-950">AptitudePro</p>
+        <p className="text-lg font-extrabold tracking-tight text-slate-950">Aptitude Platform</p>
         <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-sky-700">
           <ClipboardList className="h-3.5 w-3.5" />
           Teacher operations
@@ -76,7 +76,7 @@ export default function TeacherLayout() {
     <div className="min-h-screen bg-slate-50">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-200 bg-white lg:block">{sidebar}</aside>
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
-        <p className="text-lg font-extrabold text-slate-950">AptitudePro</p>
+        <p className="text-lg font-extrabold text-slate-950">Aptitude Platform</p>
         <button type="button" onClick={() => setMobileOpen((value) => !value)} className="rounded-md border border-slate-200 p-2">
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>

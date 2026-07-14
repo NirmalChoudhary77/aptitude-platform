@@ -1,4 +1,4 @@
-# AptitudePro
+# Aptitude Platform
 
 > A clean MERN platform for creating, running, monitoring, and reviewing aptitude exams.
 
@@ -8,7 +8,7 @@
 ![Vite](https://img.shields.io/badge/Vite-7-f59e0b?style=flat-square)
 ![Gemini](https://img.shields.io/badge/Gemini-AI-2563eb?style=flat-square)
 
-AptitudePro gives teachers a sharp exam-operations workspace and students a focused test-taking experience. It supports AI-assisted question generation, live exam monitoring, ranked results, analytics, detailed solutions, and previous-year question sets.
+Aptitude Platform gives teachers a sharp exam-operations workspace and students a focused test-taking experience. It supports AI-assisted question generation, live exam monitoring, ranked results, analytics, detailed solutions, and previous-year question sets.
 
 ## What It Does
 
