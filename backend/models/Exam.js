@@ -34,6 +34,29 @@ const examSchema = new mongoose.Schema({
   instructions: [{
     type: String,
   }],
+  integrity: {
+    fullscreen_required: {
+      type: Boolean,
+      default: true,
+    },
+    randomize_questions: {
+      type: Boolean,
+      default: true,
+    },
+    auto_submit_violation_limit: {
+      type: Number,
+      default: 3,
+      min: 1,
+    },
+    block_copy_paste: {
+      type: Boolean,
+      default: true,
+    },
+    one_active_session: {
+      type: Boolean,
+      default: true,
+    },
+  },
   questions: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Question'

@@ -30,6 +30,17 @@ export default function ExamInstructions() {
   if (loading) return <div className="panel text-sm font-semibold text-slate-500">Loading instructions...</div>;
   if (error) return <div className="panel text-sm font-semibold text-red-700">{error}</div>;
 
+  const startExam = async () => {
+    if (exam.integrity?.fullscreen_required && document.fullscreenEnabled && !document.fullscreenElement) {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch {
+        // The attempt page records fullscreen failures when the browser blocks entry.
+      }
+    }
+    navigate(`/student/exam/${id}/attempt`);
+  };
+
   return (
     <div className="page-shell">
       <PageHeader
@@ -41,7 +52,7 @@ export default function ExamInstructions() {
       <section className="grid gap-4 md:grid-cols-3">
         <div className="metric"><Clock className="h-5 w-5 text-teal-700" /><p className="mt-3 text-sm font-semibold text-slate-500">Duration</p><p className="text-2xl font-extrabold">{exam.duration_minutes} min</p></div>
         <div className="metric"><FileQuestion className="h-5 w-5 text-sky-700" /><p className="mt-3 text-sm font-semibold text-slate-500">Questions</p><p className="text-2xl font-extrabold">{exam.questions?.length || 0}</p></div>
-        <div className="metric"><ShieldCheck className="h-5 w-5 text-amber-700" /><p className="mt-3 text-sm font-semibold text-slate-500">Attempts</p><p className="text-2xl font-extrabold">One</p></div>
+        <div className="metric"><ShieldCheck className="h-5 w-5 text-amber-700" /><p className="mt-3 text-sm font-semibold text-slate-500">Integrity</p><p className="text-2xl font-extrabold">{exam.integrity?.fullscreen_required ? 'Strict' : 'Standard'}</p></div>
       </section>
 
       <section className="panel">
@@ -54,7 +65,7 @@ export default function ExamInstructions() {
       </section>
 
       <div className="flex justify-end">
-        <button type="button" className="btn-primary px-8 py-3" onClick={() => navigate(`/student/exam/${id}/attempt`)}>
+        <button type="button" className="btn-primary px-8 py-3" onClick={startExam}>
           Start exam
           <ArrowRight className="h-4 w-4" />
         </button>

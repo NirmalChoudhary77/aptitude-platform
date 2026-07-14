@@ -13,9 +13,10 @@ const emptyCustomQuestion = {
   explanation: '',
 };
 
-function QuestionEditor({ onAdd, onClose }) {
+function QuestionEditor({ onAdd, onSaveToBank, onClose }) {
   const [question, setQuestion] = useState(emptyCustomQuestion);
   const [generating, setGenerating] = useState(false);
+  const [savingBank, setSavingBank] = useState(false);
 
   const update = (field, value) => setQuestion((current) => ({ ...current, [field]: value }));
   const updateOption = (index, value) => {
@@ -38,6 +39,16 @@ function QuestionEditor({ onAdd, onClose }) {
   const submit = (event) => {
     event.preventDefault();
     onAdd({ ...question, _id: `local-${Date.now()}`, isNew: true });
+  };
+
+  const saveToBank = async () => {
+    setSavingBank(true);
+    try {
+      await onSaveToBank(question);
+      setQuestion(emptyCustomQuestion);
+    } finally {
+      setSavingBank(false);
+    }
   };
 
   return (
@@ -68,6 +79,9 @@ function QuestionEditor({ onAdd, onClose }) {
         </button>
         <div className="flex gap-2">
           <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+          <button type="button" className="btn-secondary" onClick={saveToBank} disabled={savingBank || !question.text || !question.correct_option}>
+            {savingBank ? 'Saving...' : 'Save to bank'}
+          </button>
           <button type="submit" className="btn-primary">Add question</button>
         </div>
       </div>
@@ -122,6 +136,13 @@ export default function ExamBuilder({ mode, initialExam }) {
   const [generatingExam, setGeneratingExam] = useState(false);
   const [saving, setSaving] = useState(false);
   const [aiSettings, setAiSettings] = useState({ topic: '', subtopic: 'General', difficulty: 'Medium', num_questions: 5 });
+  const [integrity, setIntegrity] = useState({
+    fullscreen_required: initialExam?.integrity?.fullscreen_required ?? true,
+    randomize_questions: initialExam?.integrity?.randomize_questions ?? true,
+    auto_submit_violation_limit: initialExam?.integrity?.auto_submit_violation_limit ?? 3,
+    block_copy_paste: initialExam?.integrity?.block_copy_paste ?? true,
+    one_active_session: initialExam?.integrity?.one_active_session ?? true,
+  });
 
   useEffect(() => {
     const loadBank = async () => {
@@ -134,6 +155,14 @@ export default function ExamBuilder({ mode, initialExam }) {
   const selectedIds = questions.map((question) => question._id);
   const addQuestion = (question) => setQuestions((current) => current.some((item) => item._id === question._id) ? current : [...current, question]);
   const removeQuestion = (id) => setQuestions((current) => current.filter((question) => question._id !== id));
+  const updateIntegrity = (field, value) => setIntegrity((current) => ({ ...current, [field]: value }));
+
+  const saveQuestionToBank = async (question) => {
+    const { data } = await api.post('/questions', question);
+    setBankQuestions((current) => [data, ...current]);
+    addQuestion(data);
+    setShowCustom(false);
+  };
 
   const generateExam = async () => {
     if (!aiSettings.topic) return;
@@ -165,6 +194,7 @@ export default function ExamBuilder({ mode, initialExam }) {
         description,
         duration_minutes: Number(duration),
         questions: [...existingIds, ...createdIds],
+        integrity,
       };
 
       if (mode === 'edit') {
@@ -201,6 +231,43 @@ export default function ExamBuilder({ mode, initialExam }) {
         </div>
       </section>
 
+      <section className="panel space-y-4">
+        <div>
+          <h2 className="text-lg font-extrabold text-slate-950">Exam integrity</h2>
+          <p className="mt-1 text-sm text-slate-500">Configure anti-cheat controls for student attempts and live monitoring.</p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <label className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-700">
+            <input type="checkbox" checked={integrity.fullscreen_required} onChange={(event) => updateIntegrity('fullscreen_required', event.target.checked)} />
+            Full-screen required
+          </label>
+          <label className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-700">
+            <input type="checkbox" checked={integrity.randomize_questions} onChange={(event) => updateIntegrity('randomize_questions', event.target.checked)} />
+            Randomize questions
+          </label>
+          <label className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-700">
+            <input type="checkbox" checked={integrity.block_copy_paste} onChange={(event) => updateIntegrity('block_copy_paste', event.target.checked)} />
+            Block copy/paste
+          </label>
+          <label className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-700">
+            <input type="checkbox" checked={integrity.one_active_session} onChange={(event) => updateIntegrity('one_active_session', event.target.checked)} />
+            One active session
+          </label>
+        </div>
+        <div className="max-w-xs">
+          <label className="label" htmlFor="violation-limit">Auto-submit after violations</label>
+          <input
+            id="violation-limit"
+            className="input"
+            type="number"
+            min="1"
+            max="10"
+            value={integrity.auto_submit_violation_limit}
+            onChange={(event) => updateIntegrity('auto_submit_violation_limit', Number(event.target.value))}
+          />
+        </div>
+      </section>
+
       <section className="grid gap-6 xl:grid-cols-[1fr_22rem]">
         <div className="space-y-4">
           <div className="panel">
@@ -219,6 +286,7 @@ export default function ExamBuilder({ mode, initialExam }) {
           {showCustom && (
             <QuestionEditor
               onAdd={(question) => { addQuestion(question); setShowCustom(false); }}
+              onSaveToBank={saveQuestionToBank}
               onClose={() => setShowCustom(false)}
             />
           )}
